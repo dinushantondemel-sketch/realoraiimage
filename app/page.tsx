@@ -17,6 +17,7 @@ import {
   Lock,
   Zap,
   Info,
+  ShieldAlert,
 } from "lucide-react";
 
 interface AnalysisResult {
@@ -40,6 +41,7 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
+  const [highSensitivity, setHighSensitivity] = useState<boolean>(true);
 
   // Daily Limit State
   const [scansToday, setScansToday] = useState<number>(0);
@@ -142,7 +144,7 @@ export default function Home() {
       "Extracting image metadata...",
       "Analyzing micro-textures & skin details...",
       "Evaluating lighting, shadows & reflections...",
-      "Detecting AI generator artifacts (Midjourney/DALL-E/Flux)...",
+      "Detecting AI generator artifacts (Imagen 3/Midjourney/Flux)...",
       "Generating forensic summary with Gemini AI...",
     ];
 
@@ -161,6 +163,7 @@ export default function Home() {
         body: JSON.stringify({
           imageBase64: selectedImage,
           mimeType: mimeType,
+          highSensitivity: highSensitivity,
         }),
       });
 
@@ -248,7 +251,7 @@ Summary: ${result.summary}`;
         <div className="text-center max-w-3xl mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/60 text-xs font-semibold text-purple-300 mb-4 shadow-sm">
             <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            <span>100% Free AI Detector for Midjourney, DALL-E 3, Stable Diffusion & Flux</span>
+            <span>100% Free AI Detector for Gemini Imagen 3, Midjourney v6 & Flux.1</span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white mb-4 leading-tight">
             Is it a <span className="text-emerald-400">Real Photo</span> or{" "}
@@ -278,6 +281,31 @@ Summary: ${result.summary}`;
 
         {/* Upload & Workspace Card */}
         <div className="w-full glow-card rounded-2xl p-6 sm:p-8 glow-purple transition-all duration-300 border border-slate-800">
+          {/* Detector Mode Control Switch */}
+          <div className="mb-6 p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <ShieldAlert className="w-5 h-5 text-purple-400" />
+              <div>
+                <p className="text-xs font-bold text-white uppercase tracking-wider">
+                  Deep AI Forensic Mode (Recommended)
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  Flags ultra-realistic AI images (Google Imagen 3, Midjourney v6, Flux.1)
+                </p>
+              </div>
+            </div>
+
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={highSensitivity}
+                onChange={(e) => setHighSensitivity(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+            </label>
+          </div>
+
           {!selectedImage ? (
             /* Dropzone UI */
             <div
