@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const candidateModels = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-pro"];
+    // Active, high-capacity Gemini models with auto-fallback
+    const candidateModels = ["gemini-flash-latest", "gemini-3.5-flash", "gemini-3.6-flash", "gemini-2.5-flash"];
     let result = null;
     let lastError = null;
 
@@ -82,7 +83,12 @@ Return ONLY raw valid JSON:
     }
 
     if (!result || !result.response) {
-      throw lastError || new Error("Failed to process image with Gemini AI models.");
+      const isQuotaError = lastError?.message?.includes("429") || lastError?.message?.includes("quota");
+      throw new Error(
+        isQuotaError
+          ? "Google Gemini API rate limit reached. Please wait 30 seconds and try again!"
+          : (lastError?.message || "Failed to process image with Gemini AI models.")
+      );
     }
 
     const responseText = result.response.text();
