@@ -17,7 +17,6 @@ import {
   Lock,
   Zap,
   Info,
-  ShieldAlert,
 } from "lucide-react";
 
 interface AnalysisResult {
@@ -41,7 +40,6 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
-  const [highSensitivity, setHighSensitivity] = useState<boolean>(true);
 
   // Daily Limit State
   const [scansToday, setScansToday] = useState<number>(0);
@@ -163,7 +161,6 @@ export default function Home() {
         body: JSON.stringify({
           imageBase64: selectedImage,
           mimeType: mimeType,
-          highSensitivity: highSensitivity,
         }),
       });
 
@@ -281,31 +278,6 @@ Summary: ${result.summary}`;
 
         {/* Upload & Workspace Card */}
         <div className="w-full glow-card rounded-2xl p-6 sm:p-8 glow-purple transition-all duration-300 border border-slate-800">
-          {/* Detector Mode Control Switch */}
-          <div className="mb-6 p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <ShieldAlert className="w-5 h-5 text-purple-400" />
-              <div>
-                <p className="text-xs font-bold text-white uppercase tracking-wider">
-                  Deep AI Forensic Mode (Recommended)
-                </p>
-                <p className="text-[11px] text-slate-400">
-                  Flags ultra-realistic AI images (Google Imagen 3, Midjourney v6, Flux.1)
-                </p>
-              </div>
-            </div>
-
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={highSensitivity}
-                onChange={(e) => setHighSensitivity(e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-            </label>
-          </div>
-
           {!selectedImage ? (
             /* Dropzone UI */
             <div
@@ -497,7 +469,7 @@ Summary: ${result.summary}`;
                       />
                       <path
                         className={result.is_ai ? "text-purple-500" : "text-emerald-500"}
-                        strokeDasharray={`${result.confidence_score}, 100`}
+                        strokeDasharray={`${result.is_ai ? result.confidence_score : (100 - result.confidence_score)}, 100`}
                         strokeWidth="3.5"
                         strokeLinecap="round"
                         stroke="currentColor"
@@ -507,7 +479,7 @@ Summary: ${result.summary}`;
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-2xl font-extrabold text-white">
-                        {result.confidence_score}%
+                        {result.is_ai ? `${result.confidence_score}%` : `${100 - result.confidence_score}%`}
                       </span>
                       <span className="text-[10px] text-slate-400 font-medium">
                         {result.is_ai ? "AI Likelihood" : "Real Camera"}
