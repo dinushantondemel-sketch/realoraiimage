@@ -416,7 +416,7 @@ Summary: ${result.summary}`;
           {result && (
             <div className="mt-8 pt-8 border-t border-slate-800/80 animate-fadeIn">
               {/* Verdict Header */}
-              <div className="flex flex-col md:flex-row items-stretch gap-6 mb-8">
+              <div className="flex flex-col md:flex-row items-stretch gap-6 mb-6">
                 {/* Left: Verdict Box */}
                 <div
                   className={`flex-1 p-6 rounded-2xl border flex flex-col justify-center ${
@@ -446,7 +446,7 @@ Summary: ${result.summary}`;
 
                   <p className="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
                     <Cpu className="w-4 h-4 text-slate-400" />
-                    Predicted Model:{" "}
+                    Predicted Origin:{" "}
                     <span className="font-semibold text-slate-200">
                       {result.ai_generator_guess}
                     </span>
@@ -456,7 +456,7 @@ Summary: ${result.summary}`;
                 {/* Right: Confidence Score Gauge */}
                 <div className="w-full md:w-64 p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col items-center justify-center text-center">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                    AI Probability Score
+                    {result.is_ai ? "AI Probability Score" : "Camera Match Score"}
                   </span>
                   <div className="relative w-28 h-28 flex items-center justify-center">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
@@ -469,7 +469,7 @@ Summary: ${result.summary}`;
                       />
                       <path
                         className={result.is_ai ? "text-purple-500" : "text-emerald-500"}
-                        strokeDasharray={`${result.confidence_score}, 100`}
+                        strokeDasharray={`${result.is_ai ? result.confidence_score : 100 - result.confidence_score}, 100`}
                         strokeWidth="3.5"
                         strokeLinecap="round"
                         stroke="currentColor"
@@ -479,15 +479,25 @@ Summary: ${result.summary}`;
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-2xl font-extrabold text-white">
-                        {result.confidence_score}%
+                        {result.is_ai ? `${result.confidence_score}%` : `${100 - result.confidence_score}%`}
                       </span>
                       <span className="text-[10px] text-slate-400 font-medium">
-                        {result.is_ai ? "AI Likelihood" : "Real Match"}
+                        {result.is_ai ? "AI Likelihood" : "Real Camera"}
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Disclaimer Notice for Ultra-Realistic AI Models */}
+              {!result.is_ai && (
+                <div className="mb-6 p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs flex items-center gap-2.5">
+                  <Info className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                  <span>
+                    <strong>Forensic Disclaimer:</strong> Ultra-realistic state-of-the-art AI generators (e.g., Flux.1 Pro, Midjourney v6 B&W renders) with zero visual glitches may exhibit high camera match scores.
+                  </span>
+                </div>
+              )}
 
               {/* In-Content Ad Placement */}
               <div className="w-full my-6 h-20 rounded-xl bg-slate-900/40 border border-slate-800/60 flex items-center justify-center text-xs text-slate-500 uppercase tracking-widest">
@@ -582,7 +592,7 @@ Summary: ${result.summary}`;
               Gemini Vision AI
             </h4>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Powered by Google Gemini 1.5 Flash multimodal vision engine for deep forensic texture analysis.
+              Powered by Google Gemini 2.5 Flash multimodal vision engine for deep forensic texture analysis.
             </p>
           </div>
 
