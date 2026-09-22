@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Upload,
   Image as ImageIcon,
   Sparkles,
-  ShieldCheck,
   AlertTriangle,
   FileSearch,
   CheckCircle2,
@@ -13,10 +12,11 @@ import {
   RefreshCw,
   Copy,
   Check,
-  ExternalLink,
   Cpu,
   Eye,
   Lock,
+  Zap,
+  Info,
 } from "lucide-react";
 
 interface AnalysisResult {
@@ -27,6 +27,8 @@ interface AnalysisResult {
   indicators: string[];
   summary: string;
 }
+
+const DAILY_LIMIT = 5;
 
 export default function Home() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -39,9 +41,52 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
 
+  // Daily Limit State
+  const [scansToday, setScansToday] = useState<number>(0);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Load and check daily limit from LocalStorage
+  useEffect(() => {
+    checkDailyLimit();
+  }, []);
+
+  const checkDailyLimit = () => {
+    const todayStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const storedData = localStorage.getItem("realorai_usage");
+
+    if (storedData) {
+      try {
+        const { date, count } = JSON.parse(storedData);
+        if (date === todayStr) {
+          setScansToday(count);
+        } else {
+          // Reset for new day
+          localStorage.setItem("realorai_usage", JSON.stringify({ date: todayStr, count: 0 }));
+          setScansToday(0);
+        }
+      } catch (e) {
+        setScansToday(0);
+      }
+    } else {
+      localStorage.setItem("realorai_usage", JSON.stringify({ date: todayStr, count: 0 }));
+      setScansToday(0);
+    }
+  };
+
+  const incrementDailyUsage = () => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    const newCount = scansToday + 1;
+    setScansToday(newCount);
+    localStorage.setItem("realorai_usage", JSON.stringify({ date: todayStr, count: newCount }));
+  };
+
   const handleFileSelect = (file: File) => {
+    if (scansToday >= DAILY_LIMIT) {
+      setError(`You have reached your free limit of ${DAILY_LIMIT} scans for today. Please come back tomorrow!`);
+      return;
+    }
+
     if (!file.type.startsWith("image/")) {
       setError("Please select a valid image file (PNG, JPG, WEBP).");
       return;
@@ -71,6 +116,11 @@ export default function Home() {
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    if (scansToday >= DAILY_LIMIT) {
+      setError(`You have reached your free limit of ${DAILY_LIMIT} scans for today. Please come back tomorrow!`);
+      return;
+    }
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileSelect(e.dataTransfer.files[0]);
     }
@@ -78,6 +128,11 @@ export default function Home() {
 
   const runAnalysis = async () => {
     if (!selectedImage) return;
+
+    if (scansToday >= DAILY_LIMIT) {
+      setError(`You have reached your daily free quota of ${DAILY_LIMIT} image scans. Come back tomorrow!`);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -117,6 +172,7 @@ export default function Home() {
       }
 
       setResult(data);
+      incrementDailyUsage();
     } catch (err: any) {
       clearInterval(interval);
       setError(err?.message || "An unexpected error occurred during analysis.");
@@ -143,6 +199,8 @@ Summary: ${result.summary}`;
     setError(null);
   };
 
+  const remainingScans = Math.max(0, DAILY_LIMIT - scansToday);
+
   return (
     <main className="min-h-screen flex flex-col bg-[#090d16] text-slate-100">
       {/* Background Radial Glow */}
@@ -165,22 +223,32 @@ Summary: ${result.summary}`;
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-sm font-medium">
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Gemini Vision AI Powered
-            </span>
+          <div className="flex items-center gap-3">
+            {/* Daily Quota Counter Badge */}
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 font-medium">
+              <Zap className="w-3.5 h-3.5 text-purple-400" />
+              <span>
+                Daily Free Scans: <strong className="text-white">{remainingScans}/{DAILY_LIMIT}</strong>
+              </span>
+            </div>
           </div>
         </div>
       </header>
 
+      {/* Top Banner Ad Container (Place AdSense Code Here) */}
+      <div className="w-full max-w-5xl mx-auto px-4 pt-6">
+        <div className="w-full h-16 sm:h-20 rounded-xl bg-slate-900/40 border border-slate-800/60 flex items-center justify-center text-xs text-slate-500 uppercase tracking-widest">
+          <span>Advertisement Space</span>
+        </div>
+      </div>
+
       {/* Main Container */}
-      <div className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-10 w-full flex flex-col items-center">
+      <div className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-8 w-full flex flex-col items-center">
         {/* Hero Section */}
-        <div className="text-center max-w-3xl mb-10">
+        <div className="text-center max-w-3xl mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/60 text-xs font-semibold text-purple-300 mb-4 shadow-sm">
             <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            <span>AI Detector for Midjourney, DALL-E 3, Stable Diffusion & Flux</span>
+            <span>100% Free AI Detector for Midjourney, DALL-E 3, Stable Diffusion & Flux</span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white mb-4 leading-tight">
             Is it a <span className="text-emerald-400">Real Photo</span> or{" "}
@@ -189,9 +257,24 @@ Summary: ${result.summary}`;
             </span>
           </h1>
           <p className="text-base sm:text-lg text-slate-400 font-normal leading-relaxed">
-            Upload any photo for instant forensic analysis. Gemini Vision AI scans micro-textures, lighting consistency, skin details, and prompt rendering artifacts.
+            Upload any image to run an instant deep learning vision scan. Powered by Gemini AI.
           </p>
         </div>
+
+        {/* Daily Quota Reached Banner */}
+        {scansToday >= DAILY_LIMIT && (
+          <div className="w-full mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Info className="w-5 h-5 text-amber-400 flex-shrink-0" />
+              <div>
+                <p className="font-semibold">Daily Free Limit Reached (5/5 Scans Used)</p>
+                <p className="text-xs text-amber-400/80 mt-0.5">
+                  You have used all 5 free scans for today. Your limit will automatically reset tomorrow!
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Upload & Workspace Card */}
         <div className="w-full glow-card rounded-2xl p-6 sm:p-8 glow-purple transition-all duration-300 border border-slate-800">
@@ -200,14 +283,23 @@ Summary: ${result.summary}`;
             <div
               onDragOver={handleDragOver}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-slate-700/80 hover:border-purple-500/80 bg-slate-900/40 hover:bg-slate-900/80 rounded-xl p-8 sm:p-12 text-center cursor-pointer transition-all duration-300 group flex flex-col items-center justify-center"
+              onClick={() => {
+                if (scansToday < DAILY_LIMIT) {
+                  fileInputRef.current?.click();
+                }
+              }}
+              className={`border-2 border-dashed rounded-xl p-8 sm:p-12 text-center transition-all duration-300 flex flex-col items-center justify-center ${
+                scansToday >= DAILY_LIMIT
+                  ? "border-slate-800 bg-slate-950/40 opacity-60 cursor-not-allowed"
+                  : "border-slate-700/80 hover:border-purple-500/80 bg-slate-900/40 hover:bg-slate-900/80 cursor-pointer group"
+              }`}
             >
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/png, image/jpeg, image/webp"
                 className="hidden"
+                disabled={scansToday >= DAILY_LIMIT}
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
                     handleFileSelect(e.target.files[0]);
@@ -226,9 +318,15 @@ Summary: ${result.summary}`;
                 Supports PNG, JPG, or WEBP up to 10MB
               </p>
 
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition-all shadow-md shadow-purple-600/30">
+              <div
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all shadow-md ${
+                  scansToday >= DAILY_LIMIT
+                    ? "bg-slate-800 text-slate-500 cursor-not-allowed"
+                    : "bg-purple-600 hover:bg-purple-500 text-white shadow-purple-600/30"
+                }`}
+              >
                 <ImageIcon className="w-4 h-4" />
-                Select Photo
+                {scansToday >= DAILY_LIMIT ? "Limit Reached Today" : "Select Photo"}
               </div>
             </div>
           ) : (
@@ -287,10 +385,17 @@ Summary: ${result.summary}`;
               {!result && !loading && (
                 <button
                   onClick={runAnalysis}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold text-base shadow-xl shadow-purple-600/25 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  disabled={scansToday >= DAILY_LIMIT}
+                  className={`w-full py-4 rounded-xl font-bold text-base shadow-xl transition-all transform flex items-center justify-center gap-2 ${
+                    scansToday >= DAILY_LIMIT
+                      ? "bg-slate-800 text-slate-500 cursor-not-allowed"
+                      : "bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 hover:from-purple-500 hover:to-blue-500 text-white shadow-purple-600/25 hover:-translate-y-0.5"
+                  }`}
                 >
                   <Sparkles className="w-5 h-5 text-purple-200" />
-                  Analyze Image with Gemini Vision AI
+                  {scansToday >= DAILY_LIMIT
+                    ? "Daily Limit Reached (5/5 Scans Used)"
+                    : "Analyze Image with Gemini Vision AI"}
                 </button>
               )}
             </div>
@@ -301,7 +406,7 @@ Summary: ${result.summary}`;
             <div className="mt-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold">Analysis Failed</p>
+                <p className="font-semibold">Notice</p>
                 <p className="text-xs text-red-300/80 mt-0.5">{error}</p>
               </div>
             </div>
@@ -382,6 +487,11 @@ Summary: ${result.summary}`;
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* In-Content Ad Placement */}
+              <div className="w-full my-6 h-20 rounded-xl bg-slate-900/40 border border-slate-800/60 flex items-center justify-center text-xs text-slate-500 uppercase tracking-widest">
+                <span>Advertisement Space</span>
               </div>
 
               {/* Technical Indicators List */}
