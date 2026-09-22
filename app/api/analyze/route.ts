@@ -29,18 +29,24 @@ export async function POST(req: NextRequest) {
     let result = null;
     let lastError = null;
 
-    const prompt = `You are an elite digital image forensics investigator specializing in identifying AI-generated images (Flux.1, Midjourney v6, DALL-E 3, Stable Diffusion XL, Adobe Firefly) vs authentic camera photographs.
+    const prompt = `You are a High-Precision Digital Forensics Inspector specializing in identifying AI-generated synthetic images (Flux.1, Midjourney v6, DALL-E 3, Stable Diffusion XL, Firefly) vs authentic camera photos.
 
-CRITICAL FORENSIC DIRECTIVES:
-1. BEWARE OF VINTAGE & B&W AI IMAGES: Do NOT assume an image is a real camera photo just because it is black-and-white, sepia, monochrome, vintage, or has grain. Modern AI generators (especially Midjourney v6 and Flux) excel at producing fake vintage photos with artificial film grain to disguise synthetic signatures.
-2. EXAMINE ANATOMY & HANDS: Closely inspect hands, finger counts, knuckle folds, ear cartilage structure, pupil roundness, iris pattern symmetry, and teeth shape.
-3. EXAMINE BACKGROUND DETAILS: Check for warped background faces, illegible text/alphabets, unnatural depth-of-field blurring, blending object borders, and unnatural fabric folds.
-4. STRICT DETECTOR BIAS: Look for subtle neural diffusion patterns (hyper-real skin texture, surreal lighting balance, uncanny facial symmetry). If there is any reasonable indicator of AI generation, classify as "AI Generated" or "Likely AI".
+CRITICAL INSTRUCTION FOR DETECTING HIGH-END AI GENERATORS:
+Modern AI image generators (especially Midjourney v6, Flux.1, and SDXL) frequently produce hyper-realistic vintage black-and-white, film grain, and retro portraits to fool traditional detectors.
 
-Return a JSON object matching this schema EXACTLY:
+You MUST perform an EXTREMELY RIGOROUS FORENSIC INSPECTION on:
+1. Micro-Anatomy & Hands: Count fingers on ALL people. Check finger joints, fingernail clarity, pupil symmetry, and ear cartilage.
+2. Background Geometry & Depth: Look for flattened background perspective, distorted background faces/figures, or unreadable synthetic text/logos.
+3. Neural Texture Signatures: Differentiate between natural film grain and uniform synthetic noise overlays. Check if skin exhibits unnatural diffusion smoothing despite heavy contrast.
+
+DECISION CRITERIA:
+- If there is ANY indication of synthetic diffusion rendering, hand distortion, background flattening, or artificial grain, you MUST classify the image as "AI Generated" or "Likely AI".
+- Only classify as "Real Photograph" if there is ZERO doubt and 100% optical camera integrity.
+
+Return ONLY a JSON object matching this schema EXACTLY:
 {
   "is_ai": boolean,
-  "confidence_score": number (integer 0 to 100 representing AI Likelihood percentage. 100 = 100% AI, 0 = 100% Real Camera),
+  "confidence_score": number (integer 0 to 100 representing AI Likelihood percentage),
   "verdict": "AI Generated" | "Likely AI" | "Likely Real" | "Real Photograph",
   "ai_generator_guess": string (e.g. "Midjourney v6", "Flux.1", "DALL-E 3", "Stable Diffusion", "Authentic Camera Photo"),
   "indicators": [
@@ -48,7 +54,7 @@ Return a JSON object matching this schema EXACTLY:
     "Specific technical finding 2",
     "Specific technical finding 3"
   ],
-  "summary": "Detailed forensic explanation highlighting anatomical, texture, lighting, or background artifacts."
+  "summary": "Forensic breakdown explaining anatomical, lighting, and texture evidence."
 }`;
 
     const imagePart = {
@@ -64,7 +70,7 @@ Return a JSON object matching this schema EXACTLY:
           model: modelName,
           generationConfig: {
             responseMimeType: "application/json",
-            temperature: 0.1, // Low temperature for consistent forensic precision
+            temperature: 0.2,
           },
         });
 
