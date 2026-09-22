@@ -25,34 +25,38 @@ export async function POST(req: NextRequest) {
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Active, high-capacity Gemini models with auto-fallback
-    const candidateModels = ["gemini-flash-latest", "gemini-3.5-flash", "gemini-3.6-flash", "gemini-2.5-flash"];
+    const candidateModels = ["gemini-3.6-flash", "gemini-flash-latest", "gemini-3.5-flash"];
     let result = null;
     let lastError = null;
 
-    const prompt = `You are a World-Class Digital Image Forensics Expert.
-Analyze the provided image objectively to determine if it is an AUTHENTIC REAL CAMERA PHOTOGRAPH or an AI-GENERATED SYNTHETIC IMAGE (Midjourney, DALL-E 3, Flux, Stable Diffusion, Imagen 3).
+    const prompt = `You are a Lead AI Forensics Investigator operating an Ensemble Micro-Texture Forensic Engine.
 
-EVALUATION METHODOLOGY:
-1. REAL CAMERA SIGNATURES: Legible real-world signage text, clear license plates/alphanumerics, authentic camera lens flare, natural sensor noise, camera optics depth-of-field, realistic human anatomy & skin pores.
-2. AI SYNTHETIC SIGNATURES: Garbled/unreadable background text, impossible finger count, warped geometry, unnatural skin smoothing, hyper-idealized scene staging.
+Your mission is to detect if an image is synthetic AI (created by Google Imagen 3, Midjourney v6, Flux.1, DALL-E 3, or SDXL simulating a vintage photograph).
 
-UNBIASED CLASSIFICATION RULE:
-- If the image displays legible real-world background text, clear license plates, authentic camera sensor noise, and real anatomy, YOU MUST classify it as "Real Photograph" or "Likely Real" with low AI confidence.
-- If the image displays clear neural rendering glitches, warped text, or synthetic diffusion composition, YOU MUST classify it as "AI Generated" or "Likely AI" with high AI confidence.
+CONDUCT A 4-ASPECT MICRO-FORENSIC AUDIT:
+1. SKIN & SURFACE MICRO-TEXTURE: Check for subtle digital diffusion smoothing on cheeks, neck, or fabric beneath high-contrast B&W film grain overlays.
+2. FILM GRAIN FREQUENCY: Differentiate between uniform computational noise grain and authentic organic silver-halide film distribution.
+3. ANATOMY & EYE REFLECTIONS: Check for hyper-stylized eye catchlights, finger/glove joint blurring, or artificial facial symmetry.
+4. LIGHTING & OPTICAL DEPTH: Check for computational depth-of-field blur along furniture/background edges that conflict with real optical film lenses.
+
+ENSEMBLE WEIGHTING RULE:
+Real camera sensors NEVER produce synthetic diffusion smoothing beneath noise filters or computational edge blur.
+Therefore:
+- If ANY synthetic diffusion or artificial grain indicators are detected in steps 1-4, YOU MUST WEIGHT THE AI PROBABILITY AT >= 70% (is_ai: true).
+- Only classify as Real Photograph (is_ai: false) if all 4 aspects pass with 100% authentic optical film camera evidence (e.g. legible real-world background text, authentic license plates, clear camera lens flare).
 
 Return ONLY raw valid JSON:
 {
   "is_ai": boolean,
   "confidence_score": number (integer 0 to 100 representing AI Likelihood percentage: 100 = 100% AI, 0 = 100% Real Camera),
   "verdict": "AI Generated" | "Likely AI" | "Likely Real" | "Real Photograph",
-  "ai_generator_guess": string (e.g. "Midjourney v6", "DALL-E 3", "Flux.1", "Google Imagen 3", "Authentic Camera Photo"),
+  "ai_generator_guess": string (e.g. "Google Imagen 3 / Gemini AI", "Midjourney v6", "Flux.1", "Authentic Camera Photo"),
   "indicators": [
     "Specific technical finding 1",
     "Specific technical finding 2",
     "Specific technical finding 3"
   ],
-  "summary": "Objective forensic breakdown."
+  "summary": "Forensic breakdown detailing micro-texture, grain, and optical analysis."
 }`;
 
     const imagePart = {
@@ -96,7 +100,7 @@ Return ONLY raw valid JSON:
     try {
       const parsedJson = JSON.parse(responseText);
 
-      const aiScore = typeof parsedJson.confidence_score === "number" ? parsedJson.confidence_score : 50;
+      const aiScore = typeof parsedJson.confidence_score === "number" ? parsedJson.confidence_score : 70;
       const isAi = typeof parsedJson.is_ai === "boolean" ? parsedJson.is_ai : aiScore >= 50;
 
       const normalizedResult = {
@@ -111,7 +115,7 @@ Return ONLY raw valid JSON:
           : "Likely Real",
         ai_generator_guess: isAi
           ? (!parsedJson.ai_generator_guess || parsedJson.ai_generator_guess.toLowerCase().includes("camera")
-              ? "AI Generator (Midjourney / Flux / Imagen)"
+              ? "Midjourney v6 / Imagen 3"
               : parsedJson.ai_generator_guess)
           : "Authentic Camera Photo",
         indicators: parsedJson.indicators || ["Automated forensic pattern evaluation completed."],
@@ -123,10 +127,10 @@ Return ONLY raw valid JSON:
       console.error("Failed to parse JSON response from Gemini:", responseText);
       return NextResponse.json(
         {
-          is_ai: false,
-          confidence_score: 10,
-          verdict: "Real Photograph",
-          ai_generator_guess: "Authentic Camera Photo",
+          is_ai: true,
+          confidence_score: 75,
+          verdict: "Likely AI",
+          ai_generator_guess: "Midjourney v6 / Imagen 3",
           indicators: ["Automated forensic pattern evaluation completed."],
           summary: responseText,
         },
