@@ -25,12 +25,10 @@ export async function POST(req: NextRequest) {
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        responseMimeType: "application/json",
-      },
-    });
+
+    const candidateModels = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-pro"];
+    let result = null;
+    let lastError = null;
 
     const prompt = `You are a world-class expert digital forensics investigator specializing in detecting AI-generated synthetic images (such as Midjourney v6, DALL-E 3, Stable Diffusion XL, Flux, Adobe Firefly) versus authentic real-world camera photographs.
 
@@ -60,7 +58,30 @@ Return a JSON object matching this schema EXACTLY:
       },
     };
 
-    const result = await model.generateContent([prompt, imagePart]);
+    // Try candidate models in order for maximum reliability
+    for (const modelName of candidateModels) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            responseMimeType: "application/json",
+          },
+        });
+
+        result = await model.generateContent([prompt, imagePart]);
+        if (result && result.response) {
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`Model ${modelName} failed, trying next:`, err?.message);
+        lastError = err;
+      }
+    }
+
+    if (!result || !result.response) {
+      throw lastError || new Error("Failed to process image with Gemini AI models.");
+    }
+
     const responseText = result.response.text();
 
     try {
