@@ -7,6 +7,9 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/"],
     },
-    sitemap: "https://realoraiimage.com/sitemap.xml",
+    sitemap: [
+      "https://www.realoraiimage.com/sitemap.xml",
+      "https://realoraiimage.com/sitemap.xml",
+    ],
   };
 }
