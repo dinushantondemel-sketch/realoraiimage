@@ -25,30 +25,30 @@ export async function POST(req: NextRequest) {
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
     const genAI = new GoogleGenerativeAI(apiKey);
-
     const candidateModels = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-pro"];
     let result = null;
     let lastError = null;
 
-    const prompt = `You are a world-class expert digital forensics investigator specializing in detecting AI-generated synthetic images (such as Midjourney v6, DALL-E 3, Stable Diffusion XL, Flux, Adobe Firefly) versus authentic real-world camera photographs.
+    const prompt = `You are an elite digital image forensics investigator specializing in identifying AI-generated images (Flux.1, Midjourney v6, DALL-E 3, Stable Diffusion XL, Adobe Firefly) vs authentic camera photographs.
 
-Analyze the provided image with extreme forensic precision. Evaluate:
-1. Micro-textures: Skin pores, hair strands, eye catchlights, finger anatomy, text rendering.
-2. Lighting & Reflections: Shadow consistency, highlight angles, specular reflections.
-3. Background & Artifacts: Over-smoothing, plastic look, prompt-specific rendering artifacts, unnatural blur/depth of field.
+CRITICAL FORENSIC DIRECTIVES:
+1. BEWARE OF VINTAGE & B&W AI IMAGES: Do NOT assume an image is a real camera photo just because it is black-and-white, sepia, monochrome, vintage, or has grain. Modern AI generators (especially Midjourney v6 and Flux) excel at producing fake vintage photos with artificial film grain to disguise synthetic signatures.
+2. EXAMINE ANATOMY & HANDS: Closely inspect hands, finger counts, knuckle folds, ear cartilage structure, pupil roundness, iris pattern symmetry, and teeth shape.
+3. EXAMINE BACKGROUND DETAILS: Check for warped background faces, illegible text/alphabets, unnatural depth-of-field blurring, blending object borders, and unnatural fabric folds.
+4. STRICT DETECTOR BIAS: Look for subtle neural diffusion patterns (hyper-real skin texture, surreal lighting balance, uncanny facial symmetry). If there is any reasonable indicator of AI generation, classify as "AI Generated" or "Likely AI".
 
 Return a JSON object matching this schema EXACTLY:
 {
   "is_ai": boolean,
-  "confidence_score": number (integer between 0 and 100),
+  "confidence_score": number (integer 0 to 100 representing AI Likelihood percentage. 100 = 100% AI, 0 = 100% Real Camera),
   "verdict": "AI Generated" | "Likely AI" | "Likely Real" | "Real Photograph",
-  "ai_generator_guess": string (e.g. "Midjourney v6", "DALL-E 3", "Stable Diffusion / Flux", "Authentic Camera Photo"),
+  "ai_generator_guess": string (e.g. "Midjourney v6", "Flux.1", "DALL-E 3", "Stable Diffusion", "Authentic Camera Photo"),
   "indicators": [
     "Specific technical finding 1",
     "Specific technical finding 2",
     "Specific technical finding 3"
   ],
-  "summary": "Clear human-readable forensic summary explaining why this image is real or AI-generated."
+  "summary": "Detailed forensic explanation highlighting anatomical, texture, lighting, or background artifacts."
 }`;
 
     const imagePart = {
@@ -58,13 +58,13 @@ Return a JSON object matching this schema EXACTLY:
       },
     };
 
-    // Try candidate models in order for maximum reliability
     for (const modelName of candidateModels) {
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
           generationConfig: {
             responseMimeType: "application/json",
+            temperature: 0.1, // Low temperature for consistent forensic precision
           },
         });
 
