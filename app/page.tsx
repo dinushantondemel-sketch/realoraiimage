@@ -469,7 +469,7 @@ Summary: ${result.summary}`;
                       />
                       <path
                         className={result.is_ai ? "text-purple-500" : "text-emerald-500"}
-                        strokeDasharray={`${result.is_ai ? result.confidence_score : 100 - result.confidence_score}, 100`}
+                        strokeDasharray={`${result.confidence_score}, 100`}
                         strokeWidth="3.5"
                         strokeLinecap="round"
                         stroke="currentColor"
@@ -479,7 +479,7 @@ Summary: ${result.summary}`;
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-2xl font-extrabold text-white">
-                        {result.is_ai ? `${result.confidence_score}%` : `${100 - result.confidence_score}%`}
+                        {result.confidence_score}%
                       </span>
                       <span className="text-[10px] text-slate-400 font-medium">
                         {result.is_ai ? "AI Likelihood" : "Real Camera"}
