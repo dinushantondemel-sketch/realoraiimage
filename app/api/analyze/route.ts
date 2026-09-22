@@ -29,32 +29,30 @@ export async function POST(req: NextRequest) {
     let result = null;
     let lastError = null;
 
-    const prompt = `You are a High-Precision Digital Forensics Inspector specializing in identifying AI-generated synthetic images (Flux.1, Midjourney v6, DALL-E 3, Stable Diffusion XL, Firefly) vs authentic camera photos.
+    const prompt = `You are a Lead AI Image Forensics Engineer operating an advanced Multi-Engine AI Detector.
 
-CRITICAL INSTRUCTION FOR DETECTING HIGH-END AI GENERATORS:
-Modern AI image generators (especially Midjourney v6, Flux.1, and SDXL) frequently produce hyper-realistic vintage black-and-white, film grain, and retro portraits to fool traditional detectors.
+Your task is to determine if the provided image was created by state-of-the-art AI generators (such as Google Imagen 3 / Gemini AI, Midjourney v6, Flux.1, DALL-E 3, or Stable Diffusion XL).
 
-You MUST perform an EXTREMELY RIGOROUS FORENSIC INSPECTION on:
-1. Micro-Anatomy & Hands: Count fingers on ALL people. Check finger joints, fingernail clarity, pupil symmetry, and ear cartilage.
-2. Background Geometry & Depth: Look for flattened background perspective, distorted background faces/figures, or unreadable synthetic text/logos.
-3. Neural Texture Signatures: Differentiate between natural film grain and uniform synthetic noise overlays. Check if skin exhibits unnatural diffusion smoothing despite heavy contrast.
+CRITICAL MULTI-ENGINE AI SIGNATURE AUDIT:
+1. GOOGLE IMAGEN 3 / GEMINI AI SIGNATURES: Check for uniform computational vintage grain overlays, ultra-smooth micro-tonal shadow falloff on skin/clothing, hyper-consistent eye catchlight reflections, and artificial historical scene composition.
+2. MIDJOURNEY v6 / FLUX.1 SIGNATURES: Check for hyper-real skin textures, uncanny facial symmetry, synthetic background bokeh, and prompt-staged subject arrangements.
+3. DALL-E 3 & SDXL SIGNATURES: Check for unreadable background text, merged finger joints, and smooth painterly fabric blending.
 
-DECISION CRITERIA:
-- If there is ANY indication of synthetic diffusion rendering, hand distortion, background flattening, or artificial grain, you MUST classify the image as "AI Generated" or "Likely AI".
-- Only classify as "Real Photograph" if there is ZERO doubt and 100% optical camera integrity.
+DECISION RULE:
+If ANY of the above synthetic hallmarks (e.g. Imagen 3 synthetic vintage grain simulation, smooth micro-tonal falloff, artificial staging, or diffusion signatures) are detected, classify the image as "AI Generated" or "Likely AI".
 
-Return ONLY a JSON object matching this schema EXACTLY:
+Return ONLY raw valid JSON:
 {
   "is_ai": boolean,
   "confidence_score": number (integer 0 to 100 representing AI Likelihood percentage),
   "verdict": "AI Generated" | "Likely AI" | "Likely Real" | "Real Photograph",
-  "ai_generator_guess": string (e.g. "Midjourney v6", "Flux.1", "DALL-E 3", "Stable Diffusion", "Authentic Camera Photo"),
+  "ai_generator_guess": string (e.g. "Google Imagen 3 / Gemini AI", "Midjourney v6", "Flux.1", "DALL-E 3", "Authentic Camera Photo"),
   "indicators": [
-    "Specific technical finding 1",
-    "Specific technical finding 2",
-    "Specific technical finding 3"
+    "Specific neural signature 1",
+    "Specific neural signature 2",
+    "Specific neural signature 3"
   ],
-  "summary": "Forensic breakdown explaining anatomical, lighting, and texture evidence."
+  "summary": "Forensic rationale detailing the neural synthesis hallmarks or camera optical evidence."
 }`;
 
     const imagePart = {
@@ -70,7 +68,7 @@ Return ONLY a JSON object matching this schema EXACTLY:
           model: modelName,
           generationConfig: {
             responseMimeType: "application/json",
-            temperature: 0.2,
+            temperature: 0.1,
           },
         });
 
